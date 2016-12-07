@@ -23,6 +23,7 @@ public class PauseCommand extends QueuePluginCommand {
                 sender.sendMessage(TextComponent.fromLegacyText(ChatColor.RED + "There is no queue set up for that server"));
             } else {
                 queue.setPaused(!queue.isPaused());
+                // TODO: Message all players in the queue
                 sender.sendMessage(TextComponent.fromLegacyText(ChatColor.RED + String.format("You have %s the queue " +
                         "for server %s", queue.isPaused() ? "paused" : "resumed", args[0])));
             }

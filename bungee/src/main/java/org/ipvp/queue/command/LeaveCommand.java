@@ -4,6 +4,7 @@ import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
+import org.ipvp.queue.Queue;
 import org.ipvp.queue.QueuePlugin;
 import org.ipvp.queue.QueuedPlayer;
 
@@ -23,7 +24,10 @@ public class LeaveCommand extends QueuePluginCommand {
             if (!queued.isInQueue()) {
                 sender.sendMessage(TextComponent.fromLegacyText(ChatColor.RED + "You are not in a queue"));
             } else {
-                queued.getQueue().remove(queued);
+                Queue queue = queued.getQueue();
+                queue.remove(queued);
+                String priority = queued.getPriority().getName();
+                queue.setPriorityCount(priority, queue.getPriorityCount(priority) - 1);
                 queued.setQueue(null);
                 sender.sendMessage(TextComponent.fromLegacyText(ChatColor.GREEN + "You have left the queue"));
             }

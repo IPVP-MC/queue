@@ -21,11 +21,13 @@ public class PlayerListener implements Listener {
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
         Priority priority = plugin.getPriority(player);
+        // TODO: Priority, and check when player joins queue or leaves queue
         ByteArrayDataOutput out = ByteStreams.newDataOutput();
         out.writeUTF("Priority");
         out.writeUTF(player.getUniqueId().toString());
         out.writeUTF(priority.getName());
         out.writeInt(priority.getWeight());
         plugin.getServer().getScheduler().runTaskLater(plugin, () -> player.sendPluginMessage(plugin, "Queue", out.toByteArray()), 5L); // Let player initialize first
+        System.out.print("Sent priority message for player in group " + priority.getName() + " with weight " + priority.getWeight());
     }
 }

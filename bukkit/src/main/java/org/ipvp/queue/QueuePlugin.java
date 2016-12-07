@@ -20,8 +20,8 @@ public class QueuePlugin extends JavaPlugin {
     public void onEnable() {
         saveDefaultConfig();
         loadPriorities();
-        getServer().getMessenger().registerIncomingPluginChannel(this, "QueuePlugin", new BungeeListener(this));
-        getServer().getMessenger().registerOutgoingPluginChannel(this, "QueuePlugin");
+        getServer().getMessenger().registerIncomingPluginChannel(this, "Queue", new BungeeListener(this));
+        getServer().getMessenger().registerOutgoingPluginChannel(this, "Queue");
         getServer().getPluginManager().registerEvents(new SignListener(this), this);
         getServer().getPluginManager().registerEvents(new PlayerListener(this), this);
     }
@@ -43,7 +43,7 @@ public class QueuePlugin extends JavaPlugin {
      * @return Signs for the server
      */
     public Set<QueueSign> getSigns(String server) {
-        return signs.stream().filter(sign -> sign.getServer().equals("server")).collect(Collectors.toSet());
+        return signs.stream().filter(sign -> sign.getServer().equalsIgnoreCase(server)).collect(Collectors.toSet());
     }
 
     /**

@@ -17,6 +17,7 @@ public class PositionNotificationTask implements Runnable {
 
     @Override
     public void run() {
+        System.out.print("PositionNotificationTask");
         plugin.getQueued().stream().filter(QueuedPlayer::isInQueue).forEach(p -> {
             p.getHandle().sendMessage(TextComponent.fromLegacyText(String.format(YELLOW + "You are currently in position "
                             + GREEN + "%d " + YELLOW + "of " + GREEN + "%d " + YELLOW + "for server " + GREEN + "%s",

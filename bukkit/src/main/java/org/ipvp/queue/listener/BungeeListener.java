@@ -19,11 +19,16 @@ public class BungeeListener implements PluginMessageListener {
 
     @Override
     public void onPluginMessageReceived(String channel, Player player, byte[] message) {
+
+        System.out.print("Incoming message on channel: " + channel);
         if (!channel.equals("Queue")) {
             return;
         }
+
         ByteArrayDataInput in = ByteStreams.newDataInput(message);
         String subchannel = in.readUTF();
+
+        System.out.print("Message on sub-channel: " + subchannel);
 
         if (subchannel.equals("Players")) {
             String server = in.readUTF();
@@ -36,6 +41,7 @@ public class BungeeListener implements PluginMessageListener {
                         sign.update(players, totalPlayers);
                     });
         } else if (subchannel.equalsIgnoreCase("Counts")) { // Queued player rank counts
+            System.out.print("Counts");
             String server = in.readUTF();
             String rank = in.readUTF();
             int count = in.readInt();

@@ -15,6 +15,7 @@
     <description>Bungeecord server queue connector</description>
 
     <build>
+        <finalName>queue</finalName>
         <resources>
             <resource>
                 <targetPath>.</targetPath>

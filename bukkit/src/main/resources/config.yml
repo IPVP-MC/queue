@@ -1,7 +1,17 @@
 priorities:
-  overlord:
-    permission: queue.priority.overlord
-    weight: 7
+  bypass:
+    permission: queue.priority.bypass
+    weight: 999
+  premium:
+    permission: queue.priority.premium
+    weight: 1
+  hero:
+    permission: queue.priority.hero
+    weight: 2
+  master:
+    permission: queue.priority.master
+    weight: 3
+
 
 # This is the sign players see when they aren't in the queue.
 queue-sign:

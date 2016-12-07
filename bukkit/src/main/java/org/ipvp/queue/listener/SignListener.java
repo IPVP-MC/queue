@@ -54,17 +54,19 @@ public class SignListener implements Listener {
         Player player = event.getPlayer();
         if (event.getAction() == Action.RIGHT_CLICK_BLOCK
                 && event.getClickedBlock().getState() instanceof Sign) {
-            Sign sign = (Sign) event.getClickedBlock();
+            Sign sign = (Sign) event.getClickedBlock().getState();
             String header = sign.getLine(0);
 
             // Check if a join sign was used
             if (header.equalsIgnoreCase(ChatColor.DARK_BLUE + "[Join]")) {
+                System.out.print("Join sign found!");
                 String target = sign.getLine(1); // Target server
                 ByteArrayDataOutput out = ByteStreams.newDataOutput();
                 out.writeUTF("Join");
                 out.writeUTF(event.getPlayer().getUniqueId().toString());
                 out.writeUTF(target);
                 player.sendPluginMessage(plugin, "Queue", out.toByteArray());
+                System.out.print("Sending plugin message queue");
             }
         }
     }

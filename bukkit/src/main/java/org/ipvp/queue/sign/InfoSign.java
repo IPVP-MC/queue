@@ -7,26 +7,28 @@ import java.util.*;
 
 public class InfoSign extends QueueSign {
 
-    private Map<Priority, Integer> counts = new HashMap<>();
+    private Map<String, Integer> counts = new HashMap<>();
 
     public InfoSign(Sign handle, String server) {
         super(handle, server);
     }
 
-    public void update(Priority priority, int count) {
-        counts.put(priority, count);
-        updateSign();
+    /**
+     * Updates a priority count waiting in this queue
+     *
+     * @param priority Priority to modify
+     * @param count New count waiting with this priority
+     */
+    public void updateCount(Priority priority, int count) {
+        counts.put(priority.getName(), count);
     }
 
-    // Helper method that updates the sign with all ranks
-    private void updateSign() {
-        SortedSet<Map.Entry<Priority, Integer>> sorted = new TreeSet<>((p1, p2) -> Integer.compare(p2.getValue(), p1.getValue()));
-        sorted.addAll(counts.entrySet());
-        int index = 0;
-        Iterator<Map.Entry<Priority, Integer>> sortedIterator = sorted.iterator();
-        while (sortedIterator.hasNext() && index++ < 4) {
-            Map.Entry<Priority, Integer> next = sortedIterator.next();
-            getHandle().setLine(index, next.getKey().getName() + ": " + next.getValue());
-        }
+    /**
+     * Returns the players and priority counts waiting in this queue
+     *
+     * @return Priority counts waiting in this queue
+     */
+    public Map<String, Integer> getCounts() {
+        return Collections.unmodifiableMap(counts);
     }
 }

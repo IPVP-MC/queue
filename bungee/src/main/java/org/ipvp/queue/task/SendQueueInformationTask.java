@@ -20,20 +20,30 @@ public class SendQueueInformationTask implements Runnable {
     @Override
     public void run() {
         // TODO: Need to send rank information for each queue
+        System.out.print("Sending queue information");
+
+        // For every server, if the server has players we send the following:
+
         plugin.getQueues().forEach(queue -> {
-            Map<String, Integer> numRanksInQueue = new HashMap<>();
-            queue.stream().map(QueuedPlayer::getPriority).forEach(p -> {
-                int num = numRanksInQueue.getOrDefault(p.getName(), 0);
-                numRanksInQueue.put(p.getName(), num + 1);
-            });
-            ServerInfo server = queue.getTarget();
-            numRanksInQueue.forEach((name, count) -> {
+            Map<String, Integer> priorityCount = queue.getPriorityCounts();
+
+            priorityCount.forEach((name, count) -> {
                 ByteArrayDataOutput out = ByteStreams.newDataOutput();
-                out.writeUTF("Count");
-                out.writeUTF(server.getName());
+                out.writeUTF("Counts");
+                out.writeUTF(queue.getTarget().getName());
                 out.writeUTF(name);
                 out.writeInt(count);
-                server.sendData("Queue", out.toByteArray());
+                byte[] data = out.toByteArray();
+
+                for (ServerInfo server : plugin.getProxy().getServers().values()) {
+                    if (server.getPlayers().isEmpty()) {
+                        continue;
+                    }
+
+                    byte[] copy = new byte[data.length];
+                    System.arraycopy(data, 0, copy, 0, data.length);
+                    server.sendData("Queue", copy);
+                }
             });
         });
     }

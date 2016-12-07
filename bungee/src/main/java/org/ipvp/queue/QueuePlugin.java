@@ -15,11 +15,15 @@ import org.ipvp.queue.command.PauseCommand;
 import org.ipvp.queue.command.QueueCommand;
 import org.ipvp.queue.command.SetLimitCommand;
 import org.ipvp.queue.task.PositionNotificationTask;
+import org.ipvp.queue.task.SendPlayerCountsTask;
 import org.ipvp.queue.task.SendQueueInformationTask;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+
+import static net.md_5.bungee.api.ChatColor.GREEN;
+import static net.md_5.bungee.api.ChatColor.YELLOW;
 
 public class QueuePlugin extends Plugin implements Listener {
 
@@ -30,9 +34,21 @@ public class QueuePlugin extends Plugin implements Listener {
     @Override
     public void onEnable() {
         getProxy().getServers().values().forEach(this::setupServer);
-        getProxy().getScheduler().schedule(this, () -> getQueues().stream().filter(Queue::canSend).forEach(Queue::sendNext), 100, TimeUnit.MILLISECONDS);
-        getProxy().getScheduler().schedule(this, new SendQueueInformationTask(this), 5, TimeUnit.SECONDS);
-        getProxy().getScheduler().schedule(this, new PositionNotificationTask(this), 1, TimeUnit.MINUTES);
+        getProxy().registerChannel("Queue");
+        getProxy().getPluginManager().registerListener(this, this);
+        getProxy().getScheduler().schedule(this, () -> {
+            System.out.print("Ticking queues...");
+            getQueues().stream().filter(q -> {
+                if (!q.canSend()) {
+                    System.out.print("Queue for " + q.getTarget().getName() + " can't send!");
+                    return false;
+                }
+                return true;
+            }).forEach(Queue::sendNext);
+        }, 50, 50, TimeUnit.MILLISECONDS);
+        getProxy().getScheduler().schedule(this, new SendQueueInformationTask(this), 5, 5, TimeUnit.SECONDS);
+        getProxy().getScheduler().schedule(this, new SendPlayerCountsTask(this), 5, 5, TimeUnit.SECONDS);
+        getProxy().getScheduler().schedule(this, new PositionNotificationTask(this), 1, 1, TimeUnit.MINUTES);
         getProxy().getPluginManager().registerCommand(this, new LeaveCommand(this));
         getProxy().getPluginManager().registerCommand(this, new PauseCommand(this));
         getProxy().getPluginManager().registerCommand(this, new QueueCommand(this));
@@ -133,39 +149,71 @@ public class QueuePlugin extends Plugin implements Listener {
         ByteArrayDataInput in = ByteStreams.newDataInput(event.getData());
         String channel = event.getTag();
 
+        System.out.print("Found message on channel: " + event.getTag());
+
         if (channel.equals("Queue")) {
             String sub = in.readUTF();
             UUID uuid = UUID.fromString(in.readUTF());
             ProxiedPlayer player = getProxy().getPlayer(uuid);
 
+            System.out.print("Message on subchannel: " + sub);
+
             if (player == null) {
+                System.out.print("Player is null? UUID: " + uuid);
                 return;
             }
 
             if (sub.equals("Join")) {
+                System.out.print("In Join");
                 QueuedPlayer queued = getQueued(player);
                 String target = in.readUTF();
                 int weight = queued.getPriority().getWeight();
                 Queue queue = getQueue(target);
 
                 if (queue == null) {
+                    System.out.print("Queue is null");
                     ServerInfo server = getProxy().getServerInfo(target); // Find server
                     if (server == null) {
                         player.sendMessage(TextComponent.fromLegacyText(ChatColor.RED + "Invalid server provided"));
+                        System.out.print("Invalid server");
                         return;
                     } else {
                         queue = new Queue(server, getMaxPlayers(server.getName()));
                         queues.put(server.getName(), queue);
+                        System.out.print("Made new queue");
                     }
                 }
 
+                if (queued.getPriority().isBypass()) {
+                    ServerInfo info = getProxy().getServerInfo(target);
+                    player.sendMessage(TextComponent.fromLegacyText(ChatColor.GREEN + "Sending you to " + info.getName() + "..."));
+                    player.connect(info, (result, error) -> {
+                        if (result) {
+                            player.sendMessage(TextComponent.fromLegacyText(ChatColor.GREEN + "You have been sent to " + info.getName()));
+                        }
+                    });
+                    return;
+                }
+
                 if (queued.getQueue() != null) {
-                    player.sendMessage(TextComponent.fromLegacyText(ChatColor.RED + "Use /leavequeue to leave your current queue."));
+                    if (queued.getQueue().getTarget().getName().equalsIgnoreCase(target)) {
+                        player.sendMessage(TextComponent.fromLegacyText(ChatColor.RED + "You are already queued for this server"));
+                    } else {
+                        player.sendMessage(TextComponent.fromLegacyText(ChatColor.RED + "Use /leavequeue to leave your current queue."));
+                    }
+                    System.out.print("/leavequeue");
                     return;
                 }
 
                 int index = queue.getIndexFor(weight);
                 queue.add(index, queued);
+                queued.setQueue(queue);
+                String priority = queued.getPriority().getName();
+                queue.setPriorityCount(priority, queue.getPriorityCount(priority) + 1);
+                player.sendMessage(TextComponent.fromLegacyText(ChatColor.GREEN + "You have joined the queue for " + queue.getTarget().getName()));
+                player.sendMessage(TextComponent.fromLegacyText(String.format(YELLOW + "You are currently in position "
+                        + GREEN + "%d " + YELLOW + "of " + GREEN + "%d", queued.getPosition(), queue.size())));
+
             } else if (sub.equals("Priority")) {
                 String name = in.readUTF();
                 int weight = in.readInt();
@@ -186,9 +234,12 @@ public class QueuePlugin extends Plugin implements Listener {
 
     private void handleLeave(ProxiedPlayer player) {
         QueuedPlayer queued = queuedPlayers.get(player);
-        if (queued.getQueue() != null) {
-            queued.getQueue().remove(queued);
+        if (queued != null && queued.getQueue() != null) {
+            Queue queue = queued.getQueue();
+            String priority = queued.getPriority().getName();
+            queue.remove(queued);
             queued.setQueue(null);
+            queue.setPriorityCount(priority, queue.getPriorityCount(priority) - 1);
         }
     }
 }
