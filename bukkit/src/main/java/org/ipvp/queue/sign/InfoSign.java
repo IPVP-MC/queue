@@ -10,7 +10,7 @@ public class InfoSign extends QueueSign {
     private Map<String, Integer> counts = new HashMap<>();
 
     public InfoSign(Sign handle, String server) {
-        super(handle, server);
+        super(handle, Type.INFO, server);
     }
 
     /**

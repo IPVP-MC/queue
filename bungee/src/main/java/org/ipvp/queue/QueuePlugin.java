@@ -37,14 +37,7 @@ public class QueuePlugin extends Plugin implements Listener {
         getProxy().registerChannel("Queue");
         getProxy().getPluginManager().registerListener(this, this);
         getProxy().getScheduler().schedule(this, () -> {
-            System.out.print("Ticking queues...");
-            getQueues().stream().filter(q -> {
-                if (!q.canSend()) {
-                    System.out.print("Queue for " + q.getTarget().getName() + " can't send!");
-                    return false;
-                }
-                return true;
-            }).forEach(Queue::sendNext);
+            getQueues().stream().filter(Queue::canSend).forEach(Queue::sendNext);
         }, 50, 50, TimeUnit.MILLISECONDS);
         getProxy().getScheduler().schedule(this, new SendQueueInformationTask(this), 5, 5, TimeUnit.SECONDS);
         getProxy().getScheduler().schedule(this, new SendPlayerCountsTask(this), 5, 5, TimeUnit.SECONDS);
@@ -213,7 +206,6 @@ public class QueuePlugin extends Plugin implements Listener {
                 player.sendMessage(TextComponent.fromLegacyText(ChatColor.GREEN + "You have joined the queue for " + queue.getTarget().getName()));
                 player.sendMessage(TextComponent.fromLegacyText(String.format(YELLOW + "You are currently in position "
                         + GREEN + "%d " + YELLOW + "of " + GREEN + "%d", queued.getPosition(), queue.size())));
-
             } else if (sub.equals("Priority")) {
                 String name = in.readUTF();
                 int weight = in.readInt();

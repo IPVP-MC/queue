@@ -55,6 +55,10 @@ public class SignListener implements Listener {
         if (event.getAction() == Action.RIGHT_CLICK_BLOCK
                 && event.getClickedBlock().getState() instanceof Sign) {
             Sign sign = (Sign) event.getClickedBlock().getState();
+
+
+
+
             String header = sign.getLine(0);
 
             // Check if a join sign was used

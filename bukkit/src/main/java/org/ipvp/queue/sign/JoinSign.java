@@ -6,7 +6,7 @@ import org.bukkit.block.Sign;
 public class JoinSign extends QueueSign {
 
     public JoinSign(Sign handle, String server) {
-        super(handle, server);
+        super(handle, Type.JOIN, server);
     }
 
     /**

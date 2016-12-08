@@ -49,9 +49,7 @@ public class BungeeListener implements PluginMessageListener {
             plugin.getSigns(server).stream()
                     .filter(s -> s instanceof InfoSign)
                     .map(s -> (InfoSign) s)
-                    .forEach(sign -> {
-                        sign.update(priority, count);
-                    });
+                    .forEach(sign -> sign.updateCount(priority, count));
         }
     }
 }
