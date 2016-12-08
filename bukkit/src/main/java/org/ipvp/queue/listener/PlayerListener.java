@@ -28,6 +28,5 @@ public class PlayerListener implements Listener {
         out.writeUTF(priority.getName());
         out.writeInt(priority.getWeight());
         plugin.getServer().getScheduler().runTaskLater(plugin, () -> player.sendPluginMessage(plugin, "Queue", out.toByteArray()), 5L); // Let player initialize first
-        System.out.print("Sent priority message for player in group " + priority.getName() + " with weight " + priority.getWeight());
     }
 }

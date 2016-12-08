@@ -26,7 +26,6 @@ public class SendPlayerCountsTask implements Runnable {
                 out.writeInt(plugin.getMaxPlayers(target.getName()));
                 server.sendData("Queue", out.toByteArray());
             });
-            System.out.print("Sent player counts to server: " + server.getName());
         });
     }
 }

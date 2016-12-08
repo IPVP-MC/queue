@@ -19,11 +19,6 @@ public class SendQueueInformationTask implements Runnable {
 
     @Override
     public void run() {
-        // TODO: Need to send rank information for each queue
-        System.out.print("Sending queue information");
-
-        // For every server, if the server has players we send the following:
-
         plugin.getQueues().forEach(queue -> {
             Map<String, Integer> priorityCount = queue.getPriorityCounts();
 

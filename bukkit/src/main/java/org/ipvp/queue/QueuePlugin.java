@@ -55,7 +55,7 @@ public class QueuePlugin extends JavaPlugin {
         try {
             object = (JSONObject) parser.parse(reader);
         } catch (ParseException e) {
-            e.printStackTrace();
+            getLogger().log(Level.SEVERE, "Failed to parse signs.json", e);
             return;
         }
 
@@ -82,15 +82,16 @@ public class QueuePlugin extends JavaPlugin {
                     break;
             }
         }
+        reader.close();
     }
 
     // Deserializes a json object into a location
     private Location deserializeLocation(JSONObject object) {
         String world = (String) object.get("world");
         World w = getServer().getWorld(world);
-        int x = (int) object.get("x");
-        int y = (int) object.get("y");
-        int z = (int) object.get("z");
+        long x = (long) object.get("x");
+        long y =  (long) object.get("y");
+        long z = (long) object.get("z");
         return new Location(w, x, y, z);
     }
 
@@ -144,6 +145,15 @@ public class QueuePlugin extends JavaPlugin {
             int weight = priorities.getInt(title + ".weight");
             this.priorities.put(title, new Priority(title, permission, weight));
         }
+    }
+
+    /**
+     * Returns all loaded signs
+     *
+     * @return Loaded signs
+     */
+    public Collection<QueueSign> getSigns() {
+        return this.signs.values();
     }
 
     /**

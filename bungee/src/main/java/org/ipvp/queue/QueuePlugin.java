@@ -142,38 +142,29 @@ public class QueuePlugin extends Plugin implements Listener {
         ByteArrayDataInput in = ByteStreams.newDataInput(event.getData());
         String channel = event.getTag();
 
-        System.out.print("Found message on channel: " + event.getTag());
-
         if (channel.equals("Queue")) {
             String sub = in.readUTF();
             UUID uuid = UUID.fromString(in.readUTF());
             ProxiedPlayer player = getProxy().getPlayer(uuid);
 
-            System.out.print("Message on subchannel: " + sub);
-
             if (player == null) {
-                System.out.print("Player is null? UUID: " + uuid);
                 return;
             }
 
             if (sub.equals("Join")) {
-                System.out.print("In Join");
                 QueuedPlayer queued = getQueued(player);
                 String target = in.readUTF();
                 int weight = queued.getPriority().getWeight();
                 Queue queue = getQueue(target);
 
                 if (queue == null) {
-                    System.out.print("Queue is null");
                     ServerInfo server = getProxy().getServerInfo(target); // Find server
                     if (server == null) {
                         player.sendMessage(TextComponent.fromLegacyText(ChatColor.RED + "Invalid server provided"));
-                        System.out.print("Invalid server");
                         return;
                     } else {
                         queue = new Queue(server, getMaxPlayers(server.getName()));
                         queues.put(server.getName(), queue);
-                        System.out.print("Made new queue");
                     }
                 }
 
@@ -194,7 +185,6 @@ public class QueuePlugin extends Plugin implements Listener {
                     } else {
                         player.sendMessage(TextComponent.fromLegacyText(ChatColor.RED + "Use /leavequeue to leave your current queue."));
                     }
-                    System.out.print("/leavequeue");
                     return;
                 }
 
@@ -205,7 +195,7 @@ public class QueuePlugin extends Plugin implements Listener {
                 queue.setPriorityCount(priority, queue.getPriorityCount(priority) + 1);
                 player.sendMessage(TextComponent.fromLegacyText(ChatColor.GREEN + "You have joined the queue for " + queue.getTarget().getName()));
                 player.sendMessage(TextComponent.fromLegacyText(String.format(YELLOW + "You are currently in position "
-                        + GREEN + "%d " + YELLOW + "of " + GREEN + "%d", queued.getPosition(), queue.size())));
+                        + GREEN + "%d " + YELLOW + "of " + GREEN + "%d", queued.getPosition() + 1, queue.size())));
             } else if (sub.equals("Priority")) {
                 String name = in.readUTF();
                 int weight = in.readInt();

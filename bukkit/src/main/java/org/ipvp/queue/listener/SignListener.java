@@ -60,13 +60,11 @@ public class SignListener implements Listener {
             QueueSign qs = plugin.getSign(sign.getLocation());
             if (qs instanceof JoinSign) {
                 String target = qs.getServer();
-                System.out.print("Join sign found!");
                 ByteArrayDataOutput out = ByteStreams.newDataOutput();
                 out.writeUTF("Join");
                 out.writeUTF(event.getPlayer().getUniqueId().toString());
                 out.writeUTF(target);
                 player.sendPluginMessage(plugin, "Queue", out.toByteArray());
-                System.out.print("Sending plugin message queue");
             }
         }
     }
