@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 
 public class QueuePlugin extends JavaPlugin {
 
-    private Set<QueueSign> signs = new HashSet<>();
+    private Map<Location, QueueSign> signs = new HashMap<>();
     private Map<String, Priority> priorities = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
     @Override
@@ -75,10 +75,10 @@ public class QueuePlugin extends JavaPlugin {
             Sign handle = (Sign) block.getState();
             switch (type) {
                 case JOIN:
-                    this.signs.add(new JoinSign(handle, server));
+                    this.signs.put(location, new JoinSign(handle, server));
                     break;
                 case INFO:
-                    this.signs.add(new InfoSign(handle, server));
+                    this.signs.put(location, new InfoSign(handle, server));
                     break;
             }
         }
@@ -112,7 +112,7 @@ public class QueuePlugin extends JavaPlugin {
 
         JSONObject root = new JSONObject();
         JSONArray signs = new JSONArray();
-        for (QueueSign sign : this.signs) {
+        for (QueueSign sign : this.signs.values()) {
             JSONObject serialized = new JSONObject();
             serialized.put("location", serializeLocation(sign.getHandle().getLocation()));
             serialized.put("type", sign.getType().name());
@@ -153,7 +153,17 @@ public class QueuePlugin extends JavaPlugin {
      * @return Signs for the server
      */
     public Set<QueueSign> getSigns(String server) {
-        return signs.stream().filter(sign -> sign.getServer().equalsIgnoreCase(server)).collect(Collectors.toSet());
+        return signs.values().stream().filter(sign -> sign.getServer().equalsIgnoreCase(server)).collect(Collectors.toSet());
+    }
+
+    /**
+     * Returns the sign at a specific location
+     *
+     * @param location Location to check
+     * @return Sign at the location, or null
+     */
+    public QueueSign getSign(Location location) {
+        return signs.get(location);
     }
 
     /**
@@ -162,8 +172,7 @@ public class QueuePlugin extends JavaPlugin {
      * @param sign Queue sign to register
      */
     public void registerSign(QueueSign sign) {
-        signs.add(sign);
-        // TODO: Need to save and load signs
+        signs.put(sign.getHandle().getLocation(), sign);
     }
 
     /**

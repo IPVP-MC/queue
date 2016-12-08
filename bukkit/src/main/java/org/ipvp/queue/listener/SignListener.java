@@ -13,6 +13,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.ipvp.queue.QueuePlugin;
 import org.ipvp.queue.sign.InfoSign;
 import org.ipvp.queue.sign.JoinSign;
+import org.ipvp.queue.sign.QueueSign;
 
 public class SignListener implements Listener {
 
@@ -56,15 +57,10 @@ public class SignListener implements Listener {
                 && event.getClickedBlock().getState() instanceof Sign) {
             Sign sign = (Sign) event.getClickedBlock().getState();
 
-
-
-
-            String header = sign.getLine(0);
-
-            // Check if a join sign was used
-            if (header.equalsIgnoreCase(ChatColor.DARK_BLUE + "[Join]")) {
+            QueueSign qs = plugin.getSign(sign.getLocation());
+            if (qs instanceof JoinSign) {
+                String target = qs.getServer();
                 System.out.print("Join sign found!");
-                String target = sign.getLine(1); // Target server
                 ByteArrayDataOutput out = ByteStreams.newDataOutput();
                 out.writeUTF("Join");
                 out.writeUTF(event.getPlayer().getUniqueId().toString());
