@@ -12,6 +12,8 @@ public class UpdateInfoSignTask implements Runnable {
 
     @Override
     public void run() {
-        
+        plugin.getSigns().forEach(s -> {
+            
+        });
     }
 }

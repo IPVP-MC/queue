@@ -196,6 +196,9 @@ public class QueuePlugin extends Plugin implements Listener {
                 player.sendMessage(TextComponent.fromLegacyText(ChatColor.GREEN + "You have joined the queue for " + queue.getTarget().getName()));
                 player.sendMessage(TextComponent.fromLegacyText(String.format(YELLOW + "You are currently in position "
                         + GREEN + "%d " + YELLOW + "of " + GREEN + "%d", queued.getPosition() + 1, queue.size())));
+                if (queue.isPaused()) {
+                    player.sendMessage(TextComponent.fromLegacyText(ChatColor.GRAY + "The queue you are currently in is paused"));
+                }
             } else if (sub.equals("Priority")) {
                 String name = in.readUTF();
                 int weight = in.readInt();

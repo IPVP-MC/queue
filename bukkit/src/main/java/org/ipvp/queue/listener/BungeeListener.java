@@ -41,6 +41,9 @@ public class BungeeListener implements PluginMessageListener {
             String rank = in.readUTF();
             int count = in.readInt();
             Priority priority = plugin.getPriority(rank);
+            if (priority == null) {
+                return;
+            }
             plugin.getSigns(server).stream()
                     .filter(s -> s instanceof InfoSign)
                     .map(s -> (InfoSign) s)

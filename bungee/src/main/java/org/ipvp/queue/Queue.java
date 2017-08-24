@@ -114,18 +114,19 @@ public class Queue extends LinkedList<QueuedPlayer> {
             throw new IllegalStateException("Cannot send next player in queue");
         }
 
-        QueuedPlayer next = get(0);
+        QueuedPlayer next = remove(0);
+        next.setQueue(null);
         next.getHandle().sendMessage(TextComponent.fromLegacyText(ChatColor.GREEN + "Sending you to " + target.getName() + "..."));
         next.getHandle().connect(target, (result, error) -> {
             // What do we do if they can't connect?
             if (result) {
-                remove(0);
                 String priority = next.getPriority().getName();
                 setPriorityCount(priority, getPriorityCount(priority) - 1);
                 next.getHandle().sendMessage(TextComponent.fromLegacyText(ChatColor.GREEN + "You have been sent to " + target.getName()));
                 lastSentTime = System.currentTimeMillis();
+            } else {
+                next.getHandle().sendMessage(TextComponent.fromLegacyText(ChatColor.RED + "Unable to connect to " + target.getName() + ". You were removed from the queue."));
             }
-            // TODO: Error!
         });
     }
 

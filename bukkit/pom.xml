@@ -10,7 +10,7 @@
         <version>1.0.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>queue-bukit</artifactId>
+    <artifactId>queue-bukkit</artifactId>
     <name>Queue</name>
     <description>Create a join-queue for a Bungeecord server lobby</description>
 

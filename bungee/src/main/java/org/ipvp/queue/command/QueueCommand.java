@@ -21,6 +21,7 @@ public class QueueCommand extends QueuePluginCommand {
         } else {
             ProxiedPlayer player = (ProxiedPlayer) sender;
             QueuedPlayer queuedPlayer = getPlugin().getQueued(player);
+
             Queue queue = queuedPlayer.getQueue();
 
             if (queue == null) {

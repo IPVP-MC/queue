@@ -1,5 +1,6 @@
 package org.ipvp.queue.task;
 
+import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.ipvp.queue.QueuePlugin;
 import org.ipvp.queue.QueuedPlayer;
@@ -23,6 +24,9 @@ public class PositionNotificationTask implements Runnable {
                     p.getPosition() + 1, p.getQueue().size(), p.getQueue().getTarget().getName())));
             p.getHandle().sendMessage(TextComponent.fromLegacyText(GREEN
                     + "Waiting too long? " + YELLOW + "Purchase a rank with priority access at " + GREEN + "store.ipvp.org"));
+            if (p.getQueue().isPaused()) {
+                p.getHandle().sendMessage(TextComponent.fromLegacyText(ChatColor.GRAY + "The queue you are currently in is paused"));
+            }
         });
     }
 }
