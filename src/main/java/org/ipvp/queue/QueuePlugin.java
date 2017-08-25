@@ -16,7 +16,6 @@ import net.md_5.bungee.event.EventHandler;
 import org.ipvp.queue.command.LeaveCommand;
 import org.ipvp.queue.command.PauseCommand;
 import org.ipvp.queue.command.QueueCommand;
-import org.ipvp.queue.command.SetLimitCommand;
 import org.ipvp.queue.task.PositionNotificationTask;
 
 import java.io.File;
@@ -56,7 +55,6 @@ public class QueuePlugin extends Plugin implements Listener {
         getProxy().getPluginManager().registerCommand(this, new LeaveCommand(this));
         getProxy().getPluginManager().registerCommand(this, new PauseCommand(this));
         getProxy().getPluginManager().registerCommand(this, new QueueCommand(this));
-        getProxy().getPluginManager().registerCommand(this, new SetLimitCommand(this));
     }
 
     /* (non-Javadoc)
