@@ -9,6 +9,9 @@ import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.*;
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.api.plugin.Plugin;
+import net.md_5.bungee.config.Configuration;
+import net.md_5.bungee.config.ConfigurationProvider;
+import net.md_5.bungee.config.YamlConfiguration;
 import net.md_5.bungee.event.EventHandler;
 import org.ipvp.queue.command.LeaveCommand;
 import org.ipvp.queue.command.PauseCommand;
@@ -16,21 +19,33 @@ import org.ipvp.queue.command.QueueCommand;
 import org.ipvp.queue.command.SetLimitCommand;
 import org.ipvp.queue.task.PositionNotificationTask;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 
 import static net.md_5.bungee.api.ChatColor.GREEN;
 import static net.md_5.bungee.api.ChatColor.YELLOW;
 
 public class QueuePlugin extends Plugin implements Listener {
 
-    private Map<String, Integer> maxPlayers = new HashMap<>();
+    private Configuration config;
+    
+    private Map<ServerInfo, Integer> maxPlayers = new HashMap<>();
     private Map<String, Queue> queues = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
     private Map<ProxiedPlayer, QueuedPlayer> queuedPlayers = new ConcurrentHashMap<>();
 
     @Override
     public void onEnable() {
+        try {
+            this.config = loadConfiguration();
+        } catch (IOException e) {
+            getLogger().log(Level.SEVERE, "Failed to load config.yml", e);
+            return;
+        }
+
         getProxy().getServers().values().forEach(this::setupServer);
         getProxy().registerChannel("Queue");
         getProxy().getPluginManager().registerListener(this, this);
@@ -44,6 +59,29 @@ public class QueuePlugin extends Plugin implements Listener {
         getProxy().getPluginManager().registerCommand(this, new SetLimitCommand(this));
     }
 
+    /* (non-Javadoc)
+     * Loads the configuration file
+     */
+    private Configuration loadConfiguration() throws IOException {
+        File file = new File(getDataFolder(), "config.yml");
+
+        if (file.exists()) {
+            return ConfigurationProvider.getProvider(YamlConfiguration.class).load(file);
+        }
+
+        // Create the file to save
+        if (!file.getParentFile().exists()) {
+            file.getParentFile().mkdirs();
+        }
+        file.createNewFile();
+
+        // Load the default provided configuration and save it to the file
+        Configuration config = ConfigurationProvider.getProvider(YamlConfiguration.class)
+                .load(getResourceAsStream("config.yml"));
+        ConfigurationProvider.getProvider(YamlConfiguration.class).save(config, file);
+        return config;
+    }
+
     // Gets the max players for a server and caches it for later use
     private void setupServer(ServerInfo info) {
         final String name = info.getName();
@@ -52,12 +90,9 @@ public class QueuePlugin extends Plugin implements Listener {
                 return;
             }
             int max = p.getPlayers().getMax();
-            maxPlayers.put(name, max);
+            maxPlayers.put(info, max);
             if (!queues.containsKey(name)) {
-                queues.put(name, new Queue(info, max));
-            } else {
-                Queue queue = queues.get(name);
-                queue.setMaxPlayers(max);
+                queues.put(name, new Queue(this, info));
             }
         });
     }
@@ -88,16 +123,12 @@ public class QueuePlugin extends Plugin implements Listener {
      * @return QueuedPlayer wrapper
      */
     public QueuedPlayer getQueued(ProxiedPlayer player) {
+        if (!queuedPlayers.containsKey(player)) {
+            QueuedPlayer queued = new QueuedPlayer(player, getPriority(player));
+            queuedPlayers.put(player, queued);
+            return queued;
+        }
         return queuedPlayers.get(player);
-    }
-
-    /**
-     * Registers a queued player
-     *
-     * @param player Player to register
-     */
-    public void addQueued(QueuedPlayer player) {
-        queuedPlayers.put(player.getHandle(), player);
     }
 
     /**
@@ -110,6 +141,21 @@ public class QueuePlugin extends Plugin implements Listener {
     }
 
     /**
+     * Returns the queue priority of a player
+     * 
+     * @param player Player to check
+     * @return players priority
+     */
+    public int getPriority(ProxiedPlayer player) {
+        for (String rank : config.getSection("priorities").getKeys()) {
+            if (player.hasPermission("queue.priority." + rank)) {
+                return config.getInt("priorities." + rank);
+            }
+        }
+        return 0;
+    }
+
+    /**
      * Gets the maximum players allowed on a server in this bungee instance
      *
      * @param server the name of the server
@@ -118,15 +164,9 @@ public class QueuePlugin extends Plugin implements Listener {
      * been loaded.
      * @throws IllegalArgumentException if a server with the name does not exist
      */
-    public int getMaxPlayers(String server) {
+    public int getMaxPlayers(ServerInfo server) {
         if (!maxPlayers.containsKey(server)) {
-            ServerInfo info = getProxy().getServerInfo(server);
-
-            if (info == null) {
-                throw new IllegalArgumentException("A server with that name does not exist");
-            }
-
-            this.setupServer(info);
+            setupServer(server);
             return -1;
         }
 
@@ -150,7 +190,7 @@ public class QueuePlugin extends Plugin implements Listener {
             if (sub.equals("Join")) {
                 QueuedPlayer queued = getQueued(player);
                 String target = in.readUTF();
-                int weight = queued.getPriority().getWeight();
+                int weight = queued.getPriority();
                 Queue queue = getQueue(target);
 
                 if (queue == null) {
@@ -159,12 +199,12 @@ public class QueuePlugin extends Plugin implements Listener {
                         player.sendMessage(TextComponent.fromLegacyText(ChatColor.RED + "Invalid server provided"));
                         return;
                     } else {
-                        queue = new Queue(server, getMaxPlayers(server.getName()));
+                        queue = new Queue(this, server);
                         queues.put(server.getName(), queue);
                     }
                 }
 
-                if (queued.getPriority().isBypass()) {
+                if (queued.getPriority() >= 999) {
                     ServerInfo info = getProxy().getServerInfo(target);
                     player.sendMessage(TextComponent.fromLegacyText(ChatColor.GREEN + "Sending you to " + info.getName() + "..."));
                     player.connect(info, (result, error) -> {
@@ -187,18 +227,12 @@ public class QueuePlugin extends Plugin implements Listener {
                 int index = queue.getIndexFor(weight);
                 queue.add(index, queued);
                 queued.setQueue(queue);
-                String priority = queued.getPriority().getName();
-                queue.setPriorityCount(priority, queue.getPriorityCount(priority) + 1);
                 player.sendMessage(TextComponent.fromLegacyText(ChatColor.GREEN + "You have joined the queue for " + queue.getTarget().getName()));
                 player.sendMessage(TextComponent.fromLegacyText(String.format(YELLOW + "You are currently in position "
                         + GREEN + "%d " + YELLOW + "of " + GREEN + "%d", queued.getPosition() + 1, queue.size())));
                 if (queue.isPaused()) {
                     player.sendMessage(TextComponent.fromLegacyText(ChatColor.GRAY + "The queue you are currently in is paused"));
                 }
-            } else if (sub.equals("Priority")) {
-                String name = in.readUTF();
-                int weight = in.readInt();
-                queuedPlayers.put(player, new QueuedPlayer(player, new Priority(name, weight)));
             }
         }
     }
@@ -206,6 +240,7 @@ public class QueuePlugin extends Plugin implements Listener {
     @EventHandler
     public void onDisconnect(PlayerDisconnectEvent event) {
         handleLeave(event.getPlayer());
+        queuedPlayers.remove(event.getPlayer());
     }
 
     @EventHandler
@@ -217,10 +252,8 @@ public class QueuePlugin extends Plugin implements Listener {
         QueuedPlayer queued = queuedPlayers.get(player);
         if (queued != null && queued.getQueue() != null) {
             Queue queue = queued.getQueue();
-            String priority = queued.getPriority().getName();
             queue.remove(queued);
             queued.setQueue(null);
-            queue.setPriorityCount(priority, queue.getPriorityCount(priority) - 1);
         }
     }
 }

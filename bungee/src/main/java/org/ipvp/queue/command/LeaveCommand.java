@@ -26,8 +26,6 @@ public class LeaveCommand extends QueuePluginCommand {
             } else {
                 Queue queue = queued.getQueue();
                 queue.remove(queued);
-                String priority = queued.getPriority().getName();
-                queue.setPriorityCount(priority, queue.getPriorityCount(priority) - 1);
                 queued.setQueue(null);
                 sender.sendMessage(TextComponent.fromLegacyText(ChatColor.GREEN + "You have left the queue"));
             }

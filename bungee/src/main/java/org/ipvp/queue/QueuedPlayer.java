@@ -7,10 +7,10 @@ import java.util.Objects;
 public final class QueuedPlayer {
 
     private ProxiedPlayer handle;
-    private Priority priority;
+    private int priority;
     private Queue queue;
 
-    public QueuedPlayer(ProxiedPlayer handle, Priority priority) {
+    public QueuedPlayer(ProxiedPlayer handle, int priority) {
         Objects.requireNonNull(handle, "Player cannot be null");
         this.handle = handle;
         this.priority = priority;
@@ -30,7 +30,7 @@ public final class QueuedPlayer {
      *
      * @return Priority information
      */
-    public Priority getPriority() {
+    public int getPriority() {
         return priority;
     }
 
@@ -83,7 +83,7 @@ public final class QueuedPlayer {
     public int hashCode() {
         int prime = 31;
         return prime * handle.hashCode()
-                + prime * priority.hashCode();
+                + prime * priority;
     }
 
     @Override
@@ -93,6 +93,6 @@ public final class QueuedPlayer {
         }
         QueuedPlayer other = (QueuedPlayer) o;
         return other.getHandle().equals(handle)
-                && other.getPriority().equals(priority);
+                && other.priority == priority;
     }
 }

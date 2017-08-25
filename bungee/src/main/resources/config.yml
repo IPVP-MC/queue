@@ -1,0 +1,5 @@
+priorities:
+  staff: 999
+  master: 3
+  hero: 2
+  premium: 1
