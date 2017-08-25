@@ -15,8 +15,6 @@ import org.ipvp.queue.command.PauseCommand;
 import org.ipvp.queue.command.QueueCommand;
 import org.ipvp.queue.command.SetLimitCommand;
 import org.ipvp.queue.task.PositionNotificationTask;
-import org.ipvp.queue.task.SendPlayerCountsTask;
-import org.ipvp.queue.task.SendQueueInformationTask;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -39,8 +37,6 @@ public class QueuePlugin extends Plugin implements Listener {
         getProxy().getScheduler().schedule(this, () -> {
             getQueues().stream().filter(Queue::canSend).forEach(Queue::sendNext);
         }, 50, 50, TimeUnit.MILLISECONDS);
-        getProxy().getScheduler().schedule(this, new SendQueueInformationTask(this), 5, 5, TimeUnit.SECONDS);
-        getProxy().getScheduler().schedule(this, new SendPlayerCountsTask(this), 5, 5, TimeUnit.SECONDS);
         getProxy().getScheduler().schedule(this, new PositionNotificationTask(this), 1, 1, TimeUnit.MINUTES);
         getProxy().getPluginManager().registerCommand(this, new LeaveCommand(this));
         getProxy().getPluginManager().registerCommand(this, new PauseCommand(this));
