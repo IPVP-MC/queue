@@ -1,6 +1,7 @@
 package org.ipvp.queue;
 
 import com.google.common.io.ByteArrayDataInput;
+import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.TextComponent;
@@ -52,6 +53,21 @@ public class QueuePlugin extends Plugin implements Listener {
             getQueues().stream().filter(Queue::canSend).forEach(Queue::sendNext);
         }, 50, 50, TimeUnit.MILLISECONDS);
         getProxy().getScheduler().schedule(this, new PositionNotificationTask(this), 1, 1, TimeUnit.MINUTES);
+        getProxy().getScheduler().schedule(this, () -> {
+            queuedPlayers.forEach((pp, qp) -> {
+                if (!qp.isInQueue()) {
+                    return;
+                }
+
+                ByteArrayDataOutput out = ByteStreams.newDataOutput();
+                out.writeUTF("QueuePosition");
+                out.writeUTF(pp.getUniqueId().toString());
+                out.writeInt(qp.getPosition());
+                out.writeUTF(qp.getQueue().getTarget().getName());
+                out.writeInt(qp.getQueue().size());
+                pp.getServer().sendData("BungeeCord", out.toByteArray());
+            });
+        }, 1L, 1L, TimeUnit.SECONDS);
         getProxy().getPluginManager().registerCommand(this, new LeaveCommand(this));
         getProxy().getPluginManager().registerCommand(this, new PauseCommand(this));
         getProxy().getPluginManager().registerCommand(this, new QueueCommand(this));
