@@ -1,5 +1,0 @@
-name: QueuePlugin
-main: org.ipvp.queue.QueuePlugin
-version: ${project.version}
-description: ${project.description}
-authors: [ SainttX ]
